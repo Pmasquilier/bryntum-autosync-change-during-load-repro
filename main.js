@@ -76,19 +76,27 @@ const removeEventDuring = (eventName, id) => {
     });
 };
 
-const report = async label => {
+const report = async (label, id) => {
     await new Promise(resolve => setTimeout(resolve, 1500));
     const pending = project.crudStoreHasChanges();
+    const sent = syncRequests.some(packet => packet.events?.removed?.some(removed => removed.id === id));
     log(`${label}: pending changes = ${pending}, sync requests so far = ${syncRequests.length}`);
-    log(pending ? `BUG — the removal is staged but no sync was ever scheduled for it` : 'OK — the removal was sent');
-    return { pending, syncRequests : syncRequests.length };
+    if (sent) {
+        log(`OK — the removal of event ${id} was sent`);
+    }
+    else {
+        log(pending
+            ? `BUG — the removal of event ${id} is staged but no sync was ever scheduled for it`
+            : `BUG — the removal of event ${id} was never sent, and is no longer even pending`);
+    }
+    return { sent };
 };
 
 // Scrolling to the bottom makes the lazy-loading resource store request the next page.
 const removeDuringLoad = async () => {
     removeEventDuring('beforeLoadCrudManagerData', 1);
     scheduler.scrollable.y = scheduler.scrollable.maxY;
-    return report('during a lazy-loaded page');
+    return report('during a lazy-loaded page', 1);
 };
 
 // A first removal triggers a sync; a second one is made while that sync's response is applied.
@@ -97,7 +105,7 @@ const removeDuringSync = async () => {
     removeEventDuring('beforeSyncCrudManagerData', 3);
     project.eventStore.remove(project.eventStore.getById(2));
     log('removed event 2 — triggers a sync');
-    const result = await report('during a sync response');
+    const result = await report('during a sync response', 3);
     log(`syncs sent after the first removal: ${syncRequests.length - before} (2 expected: one per removal)`);
     return result;
 };

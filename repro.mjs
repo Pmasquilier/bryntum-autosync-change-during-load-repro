@@ -21,6 +21,6 @@ for (const run of ['removeDuringLoad', 'removeDuringSync']) {
 }
 
 await browser.close();
-const reproduced = Object.values(results).some(({ pending }) => pending);
+const reproduced = Object.values(results).some(({ sent }) => !sent);
 console.log(reproduced ? 'reproduced' : 'not reproduced');
 process.exit(reproduced ? 0 : 1);
