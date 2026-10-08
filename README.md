@@ -10,7 +10,31 @@ npm install   # needs access to npm.bryntum.com (licensed or trial account)
 npm run dev
 ```
 
-Open http://localhost:5191/ and click one of the two buttons, or let a script click them in a fresh page each:
+### By hand
+
+Open http://localhost:5191/?events=120 — `events` gives every resource 120 more events, which makes applying a page of
+rows take about a second, long enough to land a gesture in.
+
+1. Start dragging any bar and keep the mouse button down.
+2. Press <kbd>L</kbd>. It asks for the next page of rows, standing in for scrolling down — scrolling would take the
+   dragged bar off screen. The project starts applying that page right away (the mocked load has no delay).
+3. Drop the bar somewhere else right away, within half a second or so.
+
+The bar stays where it was dropped, but the log ends with:
+
+```
+drop — moved event 2, ...
+manual drop: pending changes = false, sync requests so far = 0
+BUG — the change to event 2 was never sent, and is no longer even pending
+```
+
+Drop it without pressing <kbd>L</kbd>, or a couple of seconds after, and the move is synced as expected. Pressing
+<kbd>Delete</kbd> on a selected bar during the load does not reproduce it: the key is ignored while the page is applied,
+so nothing is removed at all.
+
+### Scripted
+
+Each button lands an edit in the window on every run, or let a script click them in a fresh page each:
 
 ```sh
 npm run dev     # in one terminal
